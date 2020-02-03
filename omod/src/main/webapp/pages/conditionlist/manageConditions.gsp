@@ -43,7 +43,7 @@ ${ui.includeFragment("coreapps", "patientHeader", [patient: patient])}
 <h2>${ui.message("coreapps.conditionui.manageConditions")}<td></h2>
 
 <div id="condition" ng-app="manageConditionsApp" ng-controller="ManageConditionsController"
-     ng-init="conditionHistoryList = getConditions('${patient.uuid}')">
+     ng-init="conditionList = getConditions('${patient.uuid}')">
     <div id="tabs">
         <ul>
             <li>
@@ -69,51 +69,58 @@ ${ui.includeFragment("coreapps", "patientHeader", [patient: patient])}
                         <th ng-if="'${hasModifyConditionsPrivilege}'">${ui.message("coreapps.actions")}</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr ng-if="conditions.size() == 0">
+                    <tbody ng-if="conditionList.size() == 0">
+                    <tr>
                         <td colspan="6" align="center">
                             ${ui.message("coreapps.conditionui.noKnownConditions")}
                         </td>
                     </tr>
-                    <tbody ng-repeat="conditionHistory in conditionHistoryList">
-                    <tr class="clickable-tr" ng-init="condition = conditionHistory.conditions[conditionHistory.conditions.length-1]"
+                    </tbody>
+                    <tbody ng-if="conditionList.size() != 0">
+                    <tr ng-repeat="condition in conditionList" class="clickable-tr"
                         ng-show="condition.status===tab && condition.voided === false">
                         <td>{{condition.concept.name}}</td>
                         <td>{{formatDate(condition.onSetDate)}}</td>
-                        <td ng-if="condition.status==='INACTIVE' && condition.voided===false" ng-style="strikeThrough(condition.voided)">{{formatDate(condition.endDate)}}</td>
+                        <td ng-if="condition.status==='INACTIVE' && condition.voided===false"
+                            ng-style="strikeThrough(condition.voided)">{{formatDate(condition.endDate)}}</td>
                         <td ng-if="'${hasModifyConditionsPrivilege}'">
-                            <i class="icon-pencil edit-action" title="${ui.message("coreapps.conditionui.editCondition","")}"
-                               ng-click="redirectToEditCondition('${ ui.pageLink("coreapps/conditionlist", "editCondition", [patientId: patient.uuid, returnUrl: returnUrl]) }',condition) "   ng-if="condition.voided===false"></i>
+                            <i class="icon-pencil edit-action"
+                               title="${ui.message("coreapps.conditionui.editCondition", "")}"
+                               ng-click="redirectToEditCondition('${ui.pageLink("coreapps/conditionlist", "editCondition", [patientId: patient.uuid, returnUrl: returnUrl])}',condition) "
+                               ng-if="condition.voided===false"></i>
                             <i class="icon-remove delete-action" title="${ui.message("coreapps.delete")}"
                                ng-click="conditionConfirmation(conditionHistory.conditions)" ng-if="condition.voided===false"></i>
                             <button style="background-color: #cccccc;border: none; color: black; padding: 5px;font-size: 10px; margin: 2px 2px; border-radius: 4px;"
-                                  ng-click="activateCondition(condition)" ng-if="condition.status==='INACTIVE' && condition.voided===false">Set Active</button> 
+                                    ng-click="activateCondition(condition)"
+                                    ng-if="condition.status==='INACTIVE' && condition.voided===false">Set Active</button>
                             <button style="background-color: #cccccc;border: none; color: black; padding: 5px;font-size: 10px; margin: 2px 2px; border-radius: 4px;"
-                                 ng-click="deactivateCondition(condition)" ng-if="condition.status==='ACTIVE' && condition.voided===false">Set Inactive</button>    
+                                    ng-click="deactivateCondition(condition)"
+                                    ng-if="condition.status==='ACTIVE' && condition.voided===false">Set Inactive</button>
                         </td>
                     </tr>
                     </tbody>
-                </tbody>
                 </table>
             </div>
         </span>
     </div>
 
-    
-<div id="remove-condition-dialog" class="dialog" style="display: none; position: absolute; left: 35%; top:30%;">
-    <div class="dialog-header">
-        <h3>${ ui.message("coreapps.conditionui.removeCondition") }</h3>
+
+    <div id="remove-condition-dialog" class="dialog" style="display: none; position: absolute; left: 35%; top:30%;">
+        <div class="dialog-header">
+            <h3>${ui.message("coreapps.conditionui.removeCondition")}</h3>
+        </div>
+
+        <div class="dialog-content">
+            <ul>
+                <li class="info">
+                    <span id="removeConditionMessage">${ui.message("coreapps.conditionui.removeCondition.message", "")}</span>
+                </li>
+            </ul>
+            <button class="confirm right" type="submit"
+                    ng-click="removeCondition()">${ui.message("general.yes")}</button>
+            <button class="cancel" ng-click="cancelDeletion()">${ui.message("general.no")}</button>
+        </div>
     </div>
-    <div class="dialog-content">
-        <ul>
-            <li class="info">
-                <span id="removeConditionMessage">${ ui.message("coreapps.conditionui.removeCondition.message","")}</span>
-            </li>
-        </ul>       
-            <button class="confirm right" type="submit" ng-click="removeCondition()">${ ui.message("general.yes") }</button>
-            <button class="cancel" ng-click="cancelDeletion()">${ ui.message("general.no") }</button>
-    </div>
-</div>
 
     <div class="actions">
         <button class="cancel"
