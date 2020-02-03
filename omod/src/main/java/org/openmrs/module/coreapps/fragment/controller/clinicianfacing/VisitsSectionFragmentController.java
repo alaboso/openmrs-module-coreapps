@@ -13,8 +13,13 @@
  */
 package org.openmrs.module.coreapps.fragment.controller.clinicianfacing;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.JsonNode;
 import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.VisitType;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.appframework.context.AppContextModel;
 import org.openmrs.module.appframework.domain.AppDescriptor;
 import org.openmrs.module.appframework.template.TemplateFactory;
@@ -27,6 +32,7 @@ import org.openmrs.module.emrapi.adt.AdtService;
 import org.openmrs.module.emrapi.patient.PatientDomainWrapper;
 import org.openmrs.module.emrapi.visit.VisitDomainWrapper;
 import org.openmrs.ui.framework.UiUtils;
+import org.openmrs.ui.framework.annotation.FragmentParam;
 import org.openmrs.ui.framework.annotation.InjectBeans;
 import org.openmrs.ui.framework.annotation.SpringBean;
 import org.openmrs.ui.framework.fragment.FragmentConfiguration;
@@ -42,17 +48,28 @@ import java.util.Map;
  */
 public class VisitsSectionFragmentController {
 
+	protected final Log log = LogFactory.getLog(VisitsSectionFragmentController.class);
+
 	public void controller(FragmentConfiguration config,
 						   PageModel pageModel,
 						   FragmentModel model,
 						   UiUtils ui,
 						   UiSessionContext sessionContext,
+						   @FragmentParam("app") AppDescriptor appDescriptor,
 						   @SpringBean("appframeworkTemplateFactory") TemplateFactory templateFactory,
                            @SpringBean("coreAppsProperties") CoreAppsProperties coreAppsProperties,
 						   @InjectBeans PatientDomainWrapper patientWrapper, @SpringBean("adtService") AdtService adtService,
 			               @SpringBean("visitTypeHelper") VisitTypeHelper visitTypeHelper) {
 		config.require("patient");
 		Object patient = config.get("patient");
+		VisitType visitType = null;
+		JsonNode visitTypeNode = appDescriptor.getConfig().path("visitType");
+		if (visitTypeNode != null) {
+			visitType = Context.getVisitService().getVisitTypeByUuid(visitTypeNode.getTextValue());
+			if (visitType == null) {
+				log.warn("Visit type with uuid: " + visitTypeNode.getTextValue() + " not found.");
+			}
+		}
 
 		if (patient instanceof Patient) {
 			patientWrapper.setPatient((Patient) patient);
@@ -101,7 +118,7 @@ public class VisitsSectionFragmentController {
 		visitsPageUrl = "/" + ui.contextPath() + "/" + visitsPageUrl;
 		model.addAttribute("visitsUrl", templateFactory.handlebars(visitsPageUrl, contextModel));
 
-		List<VisitDomainWrapper> recentVisits = patientWrapper.getAllVisitsUsingWrappers();
+		List<VisitDomainWrapper> recentVisits = visitType != null ? patientWrapper.getVisitsByTypeUsingWrappers(visitType) : patientWrapper.getAllVisitsUsingWrappers();
 		if (recentVisits.size() > 5) {
 			recentVisits = recentVisits.subList(0, 5);
 		}
