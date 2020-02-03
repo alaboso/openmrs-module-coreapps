@@ -23,6 +23,15 @@ function ManageConditionsController($scope, RestfulService, CommonFunctions) {
             if ($scope.patientUuid !== null && $scope.patientUuid !== undefined) {
                 RestfulService.get('conditionhistory', {"patientUuid": $scope.patientUuid}, function (data) {
                     $scope.conditionHistoryList = data;
+
+                    var conditionList = [];
+                    data.forEach(function (conditionHistory) {
+                        conditionHistory.conditions.sort(function (a, b) {
+                            return a.dateCreated > b.dateCreated;
+                        });
+                        conditionList.push(conditionHistory.conditions.pop());
+                    });
+                    $scope.conditionList = conditionList;
                 }, function (error) {
                 });
             }
