@@ -22,7 +22,7 @@
 %>
 
 <div class="info-section conditions" ng-app="manageConditionsApp" ng-controller="ManageConditionsController"
-     ng-init="conditionHistoryList = getConditions('${patient.patient.uuid}')">
+     ng-init="conditionList = getConditions('${patient.patient.uuid}')">
     <div class="info-header">
         <i class="icon-diagnosis"></i>
 
@@ -32,8 +32,8 @@
     </div>
 
     <div class="info-body">
-        <ul ng-repeat="conditionHistory in conditionHistoryList">
-            <li class="conditionStatus" ng-init="condition = conditionHistory.conditions[0]"
+        <ul>
+            <li class="conditionStatus" ng-repeat="condition in conditionList" 
                 ng-show="condition.status === 'ACTIVE' && condition.voided==false">
                 <span ng-style="strikeThrough(condition.voided)">{{condition.concept.name}}</span>
                 <i class="icon-remove delete-action" title="${ui.message("coreapps.delete")}"
